@@ -26,8 +26,15 @@ def test_translate():
 @app.post("/translate")
 async def translate_text(data: dict):
     q = data.get("q")
+    if not q:
+        return {"error": "No text provided"}
+
     source = data.get("source", "en")
     target = data.get("target", "es")
 
-    translated = lt.translate(q, source, target)
+    try:
+        translated = lt.translate(q, source, target)
+    except Exception as e:
+        return {"error": str(e)}
+
     return {"translatedText": translated}
