@@ -4,20 +4,19 @@ from fastapi.responses import JSONResponse
 import requests
 import logging
 
-# Configure logging
+# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# CORS middleware — allow all origins temporarily for testing
-# You can replace ["*"] with ["https://contenthub.guru"] in production
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # or ["https://contenthub.guru"] for stricter CORS
+    allow_origins=["https://contenthub.guru"],
     allow_credentials=True,
-    allow_methods=["*"],  # allow all HTTP methods including POST, OPTIONS
-    allow_headers=["*"],  # allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Logging middleware
@@ -33,12 +32,7 @@ async def log_requests(request: Request, call_next):
 def home():
     return {"message": "Translation API is running"}
 
-# Test GET endpoint
-@app.get("/translate")
-def test_translate():
-    return {"message": "Use POST with JSON to translate text"}
-
-# Translation POST endpoint
+# POST translation endpoint
 @app.post("/translate")
 async def translate_text(data: dict):
     q = data.get("q")
@@ -51,16 +45,17 @@ async def translate_text(data: dict):
     logger.info(f"Translating text ({len(q)} chars) from {source} to {target}")
 
     try:
-        # Call your hosted LibreTranslate API
+        # Call your hosted LibreTranslate API (not your own endpoint)
         res = requests.post(
-            "https://translateapi-1-mx67.onrender.com/translate",
+            "https://translateapi-1-mx67.onrender.com/translate",  # ← this should point to your LibreTranslate instance
             json={"q": q, "source": source, "target": target},
             timeout=20
         )
         res.raise_for_status()
         result = res.json()
-        translated = result.get("translatedText")
 
+        # LibreTranslate returns either "translatedText" or "translation"
+        translated = result.get("translatedText") or result.get("translation")
         if not translated:
             logger.error(f"No translation returned: {result}")
             return JSONResponse(content={"error": "Translation failed"}, status_code=500)
@@ -71,6 +66,3 @@ async def translate_text(data: dict):
     except requests.exceptions.RequestException as e:
         logger.error(f"Translation request failed: {e}")
         return JSONResponse(content={"error": f"Translation request failed: {str(e)}"}, status_code=500)
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        return JSONResponse(content={"error": f"Unexpected error: {str(e)}"}, status_code=500)
