@@ -10,13 +10,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# CORS middleware
+# CORS middleware — allow all origins temporarily for testing
+# You can replace ["*"] with ["https://contenthub.guru"] in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # your frontend
+    allow_origins=["*"],  # or ["https://contenthub.guru"] for stricter CORS
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # allow all HTTP methods including POST, OPTIONS
+    allow_headers=["*"],  # allow all headers
 )
 
 # Logging middleware
