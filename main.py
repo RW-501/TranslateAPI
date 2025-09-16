@@ -1,10 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from libretranslatepy import LibreTranslateAPI
+import logging
 
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+
+# Create FastAPI app
 app = FastAPI()
 
-# Allow all origins for now
+# Logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logging.info(f"Incoming request: {request.method} {request.url}")
+    logging.info(f"Headers: {request.headers}")
+    response = await call_next(request)
+    logging.info(f"Response status: {response.status_code}")
+    return response
+
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://contenthub.guru"],  # your frontend URL
@@ -13,9 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# LibreTranslate instance
+lt = LibreTranslateAPI("https://translateapi-1-mx67.onrender.com")
 
-lt = LibreTranslateAPI("https://translateapi-1-mx67.onrender.com")  # or your server URL
-
+# Routes
 @app.get("/")
 def home():
     return {"message": "Translation API is running"}
