@@ -4,14 +4,16 @@ from fastapi.responses import JSONResponse
 import requests
 import logging
 
+# Configure logging
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# CORS
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],
+    allow_origins=["https://contenthub.guru"],  # your frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -20,23 +22,22 @@ app.add_middleware(
 # Logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    logging.info(f"Incoming request: {request.method} {request.url}")
-    logging.info(f"Headers: {request.headers}")
+    logger.info(f"Incoming request: {request.method} {request.url}")
     response = await call_next(request)
-    logging.info(f"Response status: {response.status_code}")
+    logger.info(f"Response status: {response.status_code}")
     return response
 
-# Root
+# Root endpoint
 @app.get("/")
 def home():
     return {"message": "Translation API is running"}
 
-# Test route
+# Test GET endpoint
 @app.get("/translate")
 def test_translate():
     return {"message": "Use POST with JSON to translate text"}
 
-# Translation endpoint
+# Translation POST endpoint
 @app.post("/translate")
 async def translate_text(data: dict):
     q = data.get("q")
@@ -46,23 +47,29 @@ async def translate_text(data: dict):
     source = data.get("source", "en")
     target = data.get("target", "es")
 
-    logging.info(f"Translating text ({len(q)} chars) from {source} to {target}")
+    logger.info(f"Translating text ({len(q)} chars) from {source} to {target}")
 
-    # Call your hosted LibreTranslate API (proxy)
     try:
+        # Call your hosted LibreTranslate API
         res = requests.post(
-            "https://translateapi-1-mx67.onrender.com/translate",  # Your server URL
+            "https://translateapi-1-mx67.onrender.com/translate",
             json={"q": q, "source": source, "target": target},
             timeout=10
         )
         res.raise_for_status()
         result = res.json()
         translated = result.get("translatedText")
+
         if not translated:
-            logging.error(f"No translation returned: {result}")
+            logger.error(f"No translation returned: {result}")
             return JSONResponse(content={"error": "Translation failed"}, status_code=500)
-        logging.info(f"Translated text: {translated}")
+
+        logger.info(f"Translated text: {translated}")
         return JSONResponse(content={"translatedText": translated})
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Translation request failed: {e}")
+        return JSONResponse(content={"error": f"Translation request failed: {str(e)}"}, status_code=500)
     except Exception as e:
-        logging.error(f"Translation error: {e}")
-        return JSONResponse(content={"error": f"Translation error: {str(e)}"}, status_code=500)
+        logger.error(f"Unexpected error: {e}")
+        return JSONResponse(content={"error": f"Unexpected error: {str(e)}"}, status_code=500)
