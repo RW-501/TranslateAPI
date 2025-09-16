@@ -27,8 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# LibreTranslate instance
-lt = LibreTranslateAPI("https://translateapi-1-mx67.onrender.com")
+# Use a real LibreTranslate server
+lt = LibreTranslateAPI("https://libretranslate.de")  # ← fix here
 
 # Routes
 @app.get("/")
@@ -49,6 +49,7 @@ async def translate_text(data: dict):
     target = data.get("target", "es")
 
     try:
+        # Translate text via LibreTranslate server
         translated = lt.translate(q, source, target)
     except Exception as e:
         return {"error": str(e)}
