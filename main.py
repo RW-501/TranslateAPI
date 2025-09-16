@@ -1,7 +1,13 @@
-from libretranslate.app import create_app
+from fastapi import FastAPI
+from translate import Translator
 
-app = create_app()
+app = FastAPI()
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000, reload=True)
+@app.get("/")
+def root():
+    return {"message": "Translator API running"}
+
+@app.post("/translate/")
+def translate_text(text: str, to_lang: str = "es"):
+    translator = Translator(to_lang=to_lang)
+    return {"translated": translator.translate(text)}
