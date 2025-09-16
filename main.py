@@ -7,7 +7,7 @@ app = FastAPI()
 # Allow requests from your site
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # 👈 your frontend domain
+allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
