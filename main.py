@@ -55,7 +55,7 @@ async def translate_text(data: dict):
         res = requests.post(
             "https://translateapi-1-mx67.onrender.com/translate",
             json={"q": q, "source": source, "target": target},
-            timeout=10
+            timeout=20
         )
         res.raise_for_status()
         result = res.json()
