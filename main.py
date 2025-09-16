@@ -42,7 +42,7 @@ app.add_middleware(
 )
 
 # Use a real LibreTranslate server
-lt = LibreTranslateAPI("https://libretranslate.de")
+lt = LibreTranslateAPI("https://de.libretranslate.com")
 
 
 def translate_with_logging(q: str, source: str = "en", target: str = "es") -> str | None:
