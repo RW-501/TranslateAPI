@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 # Use a real LibreTranslate server
-lt = LibreTranslateAPI("https://libretranslate.de")  # ← fix here
+lt = LibreTranslateAPI("https://de.libretranslate.com/")  # ← fix here
 
 # Routes
 @app.get("/")
