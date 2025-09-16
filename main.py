@@ -10,18 +10,14 @@ logging.basicConfig(level=logging.INFO)
 # Create FastAPI app
 app = FastAPI()
 
-
-
-
-# Routes
-@app.get("/")
-def home():
-    return {"message": "Translation API is running"}
-
-@app.get("/translate")
-def test_translate():
-    return {"message": "Use POST with JSON to translate text"}
-
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://contenthub.guru"],  # your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Logging middleware
 @app.middleware("http")
@@ -32,21 +28,19 @@ async def log_requests(request: Request, call_next):
     logging.info(f"Response status: {response.status_code}")
     return response
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Routes
+@app.get("/")
+def home():
+    return {"message": "Translation API is running"}
+
+@app.get("/translate")
+def test_translate():
+    return {"message": "Use POST with JSON to translate text"}
 
 # Use a real LibreTranslate server
-lt = LibreTranslateAPI("https://de.libretranslate.com")
-
+lt = LibreTranslateAPI("https://libretranslate.de")  # or https://de.libretranslate.com
 
 def translate_with_logging(q: str, source: str = "en", target: str = "es") -> str | None:
-    """Wrapper for LibreTranslateAPI that logs requests and errors."""
     logging.info(f"Translating text ({len(q)} chars) from {source} to {target}")
     try:
         translated = lt.translate(q, source, target)
@@ -55,7 +49,6 @@ def translate_with_logging(q: str, source: str = "en", target: str = "es") -> st
     except Exception as e:
         logging.error(f"LibreTranslate error: {e}")
         return None
-
 
 @app.post("/translate")
 async def translate_text(data: dict):
