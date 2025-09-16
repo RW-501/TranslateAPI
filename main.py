@@ -30,6 +30,16 @@ app.add_middleware(
 # Use a real LibreTranslate server
 lt = LibreTranslateAPI("https://de.libretranslate.com/")  # ← fix here
 
+def translate_with_logging(q, source="en", target="es"):
+    logging.info(f"Translating text ({len(q)} chars) from {source} to {target}")
+    try:
+        translated = lt.translate(q, source, target)
+        logging.info(f"Translated text: {translated}")
+        return translated
+    except Exception as e:
+        logging.error(f"LibreTranslate error: {e}")
+        return None
+
 # Routes
 @app.get("/")
 def home():
@@ -47,7 +57,10 @@ async def translate_text(data: dict):
 
     source = data.get("source", "en")
     target = data.get("target", "es")
-
+    
+    translated = translate_with_logging(q, source, target)
+    if not translated:
+        return {"error": "Translation failed"}
     try:
         # Translate text via LibreTranslate server
         translated = lt.translate(q, source, target)
