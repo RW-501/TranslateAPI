@@ -7,7 +7,7 @@ app = FastAPI()
 # Allow all origins for now
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://contenthub.guru"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
