@@ -14,10 +14,16 @@ app.add_middleware(
 )
 
 @app.get("/")
-def root():
-    return {"message": "Translator API running"}
+def home():
+    return {"message": "Translation API is running"}
 
-@app.post("/translate/")
-def translate_text(text: str, to_lang: str = "es"):
-    translator = Translator(to_lang=to_lang)
-    return {"translated": translator.translate(text)}
+@app.post("/translate")
+async def translate_text(data: dict):
+    q = data.get("q")
+    source = data.get("source", "en")
+    target = data.get("target", "es")
+
+    translator = Translator(from_lang=source, to_lang=target)
+    translated = translator.translate(q)
+
+    return {"translatedText": translated}
