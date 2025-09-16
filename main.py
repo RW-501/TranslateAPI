@@ -14,7 +14,7 @@ app = FastAPI()
 # You can replace ["*"] with ["https://contenthub.guru"] in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or ["https://contenthub.guru"] for stricter CORS
+    allow_origins=["https://contenthub.guru"],  # or ["https://contenthub.guru"] for stricter CORS
     allow_credentials=True,
     allow_methods=["*"],  # allow all HTTP methods including POST, OPTIONS
     allow_headers=["*"],  # allow all headers
