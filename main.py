@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from libretranslatepy import LibreTranslateAPI
+from fastapi.responses import JSONResponse
 import logging
 
 # Setup logging
@@ -8,6 +9,19 @@ logging.basicConfig(level=logging.INFO)
 
 # Create FastAPI app
 app = FastAPI()
+
+
+
+
+# Routes
+@app.get("/")
+def home():
+    return {"message": "Translation API is running"}
+
+@app.get("/translate")
+def test_translate():
+    return {"message": "Use POST with JSON to translate text"}
+
 
 # Logging middleware
 @app.middleware("http")
@@ -21,16 +35,18 @@ async def log_requests(request: Request, call_next):
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # your frontend URL
+    allow_origins=["https://contenthub.guru"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Use a real LibreTranslate server
-lt = LibreTranslateAPI("https://de.libretranslate.com/")  # ← fix here
+lt = LibreTranslateAPI("https://libretranslate.de")
 
-def translate_with_logging(q, source="en", target="es"):
+
+def translate_with_logging(q: str, source: str = "en", target: str = "es") -> str | None:
+    """Wrapper for LibreTranslateAPI that logs requests and errors."""
     logging.info(f"Translating text ({len(q)} chars) from {source} to {target}")
     try:
         translated = lt.translate(q, source, target)
@@ -40,31 +56,18 @@ def translate_with_logging(q, source="en", target="es"):
         logging.error(f"LibreTranslate error: {e}")
         return None
 
-# Routes
-@app.get("/")
-def home():
-    return {"message": "Translation API is running"}
-
-@app.get("/translate")
-def test_translate():
-    return {"message": "Use POST with JSON to translate text"}
 
 @app.post("/translate")
 async def translate_text(data: dict):
     q = data.get("q")
     if not q:
-        return {"error": "No text provided"}
+        return JSONResponse(content={"error": "No text provided"}, status_code=400)
 
     source = data.get("source", "en")
     target = data.get("target", "es")
-    
+
     translated = translate_with_logging(q, source, target)
     if not translated:
-        return {"error": "Translation failed"}
-    try:
-        # Translate text via LibreTranslate server
-        translated = lt.translate(q, source, target)
-    except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(content={"error": "Translation failed"}, status_code=500)
 
-    return {"translatedText": translated}
+    return JSONResponse(content={"translatedText": translated})
