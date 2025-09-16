@@ -7,11 +7,12 @@ app = FastAPI()
 # Allow all origins for now
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://contenthub.guru"],  # your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 lt = LibreTranslateAPI("https://translateapi-1-mx67.onrender.com")  # or your server URL
 
