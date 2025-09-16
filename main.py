@@ -17,6 +17,11 @@ app.add_middleware(
 def home():
     return {"message": "Translation API is running"}
 
+@app.get("/translate")
+def test_translate():
+    return {"message": "Use POST with JSON to translate text"}
+
+
 @app.post("/translate")
 async def translate_text(data: dict):
     q = data.get("q")
