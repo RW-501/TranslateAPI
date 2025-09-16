@@ -1,19 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from libretranslatepy import LibreTranslateAPI
+from translate import Translator
 
 app = FastAPI()
 
-# Allow all origins for now
+# Allow requests from any origin
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # any frontend can call it
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-lt = LibreTranslateAPI("https://translateapi-1-mx67.onrender.com")  # or your server URL
 
 @app.get("/")
 def home():
@@ -29,5 +27,7 @@ async def translate_text(data: dict):
     source = data.get("source", "en")
     target = data.get("target", "es")
 
-    translated = lt.translate(q, source, target)
+    translator = Translator(from_lang=source, to_lang=target)
+    translated = translator.translate(q)
+
     return {"translatedText": translated}
