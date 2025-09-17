@@ -4,7 +4,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import logging
 import asyncio
-from translate import Translator
+import argostranslate.package
+import argostranslate.translate
+import os
 
 # -----------------------
 # Logging setup
@@ -13,12 +15,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("translate_api")
 
 # -----------------------
+# Load Argos Translate models
+# -----------------------
+models_dir = os.path.join(os.getcwd(), "models")
+for filename in os.listdir(models_dir):
+    if filename.endswith(".argosmodel"):
+        package_path = os.path.join(models_dir, filename)
+        logger.info(f"Loading model: {package_path}")
+        argostranslate.package.install_from_path(package_path)
+
+installed_languages = argostranslate.translate.get_installed_languages()
+
+# -----------------------
 # FastAPI app
 # -----------------------
 app = FastAPI(
     title="LibreTranslate API Wrapper",
-    description="A FastAPI wrapper for self-hosted LibreTranslate",
-    version="1.0.0",
+    description="A FastAPI wrapper using Argos Translate models",
+    version="1.1.0",
 )
 
 # -----------------------
@@ -26,7 +40,7 @@ app = FastAPI(
 # -----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # Change to your frontend domain in production
+    allow_origins=["https://contenthub.guru"],  # adjust for prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,11 +69,8 @@ async def log_requests(request, call_next):
 # -----------------------
 @app.get("/")
 async def home():
-    return {"message": "Translation API is running"}
-
-@app.get("/translate")
-async def get_translate_info():
-    return {"message": "Use POST with JSON to translate text"}
+    langs = [f"{lang.code} ({lang.name})" for lang in installed_languages]
+    return {"message": "Translation API is running", "languages": langs}
 
 # -----------------------
 # Translate Endpoint
@@ -72,9 +83,19 @@ async def translate_text(data: TranslateRequest):
     logger.info(f"Translating ({len(data.q)} chars) from {data.source} to {data.target}")
 
     try:
-        # Run blocking translation in executor to avoid blocking event loop
+        # Find matching installed languages
+        from_lang = next((lang for lang in installed_languages if lang.code == data.source), None)
+        to_lang = next((lang for lang in installed_languages if lang.code == data.target), None)
+
+        if not from_lang or not to_lang:
+            return JSONResponse(
+                content={"error": f"Language not supported: {data.source} → {data.target}"},
+                status_code=400,
+            )
+
+        # Translation is synchronous → run in executor
         translated = await asyncio.get_running_loop().run_in_executor(
-            None, lambda: Translator(from_lang=data.source, to_lang=data.target).translate(data.q)
+            None, lambda: from_lang.get_translation(to_lang).translate(data.q)
         )
 
         if not translated:
