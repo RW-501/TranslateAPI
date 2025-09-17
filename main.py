@@ -13,7 +13,7 @@ app = FastAPI()
 # Allow requests from your frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # Replace with your site
+    allow_origins=["*"],  # Replace with your site
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,8 +35,15 @@ def home():
 def test_translate():
     return {"message": "Use POST with JSON to translate text"}
 
+from pydantic import BaseModel
+
+class TranslateRequest(BaseModel):
+    q: str
+    source: str = "en"
+    target: str = "es"
+
 @app.post("/translate")
-async def translate_text(data: dict):
+async def translate_text(data: TranslateRequest):
     q = data.get("q")
     if not q:
         return JSONResponse(content={"error": "No text provided"}, status_code=400)
