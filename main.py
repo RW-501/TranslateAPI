@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import requests
+from translate import Translator
 import logging
 
 # Logging setup
@@ -47,23 +47,17 @@ async def translate_text(data: dict):
     logger.info(f"Translating ({len(q)} chars) from {source} to {target}")
 
     try:
-        # Call your hosted API — not yourself!
-        response = requests.post(
-            "https://translateapi-1-mx67.onrender.com/translate",
-            json={"q": q, "source": source, "target": target},
-            timeout=20
-        )
-        response.raise_for_status()
-        result = response.json()
-        translated = result.get("translatedText")
+        # Use local translate library
+        translator = Translator(from_lang=source, to_lang=target)
+        translated = translator.translate(q)
 
         if not translated:
-            logger.error(f"No translation returned: {result}")
+            logger.error("Translation returned empty")
             return JSONResponse(content={"error": "Translation failed"}, status_code=500)
 
         logger.info(f"Translated text: {translated}")
         return JSONResponse(content={"translatedText": translated})
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Translation request failed: {e}")
-        return JSONResponse(content={"error": f"Translation request failed: {str(e)}"}, status_code=500)
+    except Exception as e:
+        logger.error(f"Translation failed: {e}")
+        return JSONResponse(content={"error": f"Translation failed: {str(e)}"}, status_code=500)
