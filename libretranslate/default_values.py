@@ -38,7 +38,7 @@ def _get_value(name, default_value, value_type):
 _default_options_objects = [
     {
         'name': 'HOST',
-        'default_value': '127.0.0.1',
+        'default_value': '127.0.0.70',
         'value_type': 'str'
     },
     {

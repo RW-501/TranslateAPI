@@ -25,6 +25,7 @@ for filename in os.listdir(models_dir):
         argostranslate.package.install_from_path(package_path)
 
 installed_languages = argostranslate.translate.get_installed_languages()
+print([(lang.code, lang.name) for lang in installed_languages])
 
 # -----------------------
 # FastAPI app
