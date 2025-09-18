@@ -24,8 +24,8 @@ for filename in os.listdir(models_dir):
         logger.info(f"Loading model: {package_path}")
         argostranslate.package.install_from_path(package_path)
 
-installed_languages = argostranslate.translate.get_installed_languages()
-print([(lang.code, lang.name) for lang in installed_languages])
+#  installed_languages = argostranslate.translate.get_installed_languages()
+# print([(lang.code, lang.name) for lang in installed_languages])
 
 # -----------------------
 # FastAPI app
@@ -70,8 +70,9 @@ async def log_requests(request, call_next):
 # -----------------------
 @app.get("/")
 async def home():
-    langs = [f"{lang.code} ({lang.name})" for lang in installed_languages]
-    return {"message": "Translation API is running", "languages": langs}
+#    langs = [f"{lang.code} ({lang.name})" for lang in installed_languages]
+ #   return {"message": "Translation API is running", "languages": langs}
+    return {"message": "Translation API is running"}
 
 # -----------------------
 # Translate Endpoint
