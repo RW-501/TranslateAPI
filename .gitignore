@@ -4,7 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 db/
-models/
+# models/
 
 
 # Virtual environments
@@ -119,8 +119,8 @@ dmypy.json
 .pyre/
 
 # LibreTranslate specific
-models/
-installed_models/
+# models/
+# installed_models/
 
 # Documentation builds
 docs/_build/
