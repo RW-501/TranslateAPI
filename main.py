@@ -37,13 +37,15 @@ app = FastAPI(
 # -----------------------
 # CORS
 # -----------------------
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # adjust for production
+    allow_origins=["https://contenthub.guru","*" ],  # exact frontend origin
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],   # allow POST, GET, etc.
+    allow_headers=["*"],   # allow custom headers
 )
+
 
 # -----------------------
 # Request Model
