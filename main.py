@@ -35,7 +35,7 @@ app = FastAPI(
 # -----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # adjust for prod
+    allow_origins=["https://contenthub.guru"],  # adjust for prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
