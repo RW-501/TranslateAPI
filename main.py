@@ -7,6 +7,7 @@ import asyncio
 import argostranslate.package
 import argostranslate.translate
 import os
+import urllib.request
 
 # -----------------------
 # Logging setup
@@ -15,17 +16,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("translate_api")
 
 # -----------------------
-# Load Argos Translate models
+# Models directory
 # -----------------------
 models_dir = os.path.join(os.getcwd(), "models")
-for filename in os.listdir(models_dir):
-    if filename.endswith(".argosmodel"):
-        package_path = os.path.join(models_dir, filename)
-        logger.info(f"Loading model: {package_path}")
-        argostranslate.package.install_from_path(package_path)
-
-installed_languages = argostranslate.translate.get_installed_languages()
-print([(lang.code, lang.name) for lang in installed_languages])
+os.makedirs(models_dir, exist_ok=True)
 
 # -----------------------
 # FastAPI app
@@ -41,7 +35,7 @@ app = FastAPI(
 # -----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # adjust for prod
+    allow_origins=["*"],  # adjust for prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,10 +60,41 @@ async def log_requests(request, call_next):
     return response
 
 # -----------------------
+# Helper functions
+# -----------------------
+def download_and_install_model(source: str, target: str):
+    """
+    Downloads the Argos model for a language pair if not already installed.
+    """
+    installed_languages = argostranslate.translate.get_installed_languages()
+    # Check if translation exists
+    from_lang = next((l for l in installed_languages if l.code == source), None)
+    if from_lang and any(t.to_lang.code == target for t in from_lang.translations):
+        return  # Already installed
+
+    # Construct model URL
+    model_filename = f"translate-{source}_{target}.argosmodel"
+    model_path = os.path.join(models_dir, model_filename)
+    if not os.path.exists(model_path):
+        url = f"https://www.argosopentech.com/argospkg/{model_filename}"
+        logger.info(f"Downloading model {model_filename} from {url}")
+        try:
+            urllib.request.urlretrieve(url, model_path)
+            logger.info(f"Downloaded model to {model_path}")
+        except Exception as e:
+            logger.error(f"Failed to download model: {e}")
+            raise
+
+    # Install model
+    logger.info(f"Installing model {model_path}")
+    argostranslate.package.install_from_path(model_path)
+
+# -----------------------
 # Health Check
 # -----------------------
 @app.get("/")
 async def home():
+    installed_languages = argostranslate.translate.get_installed_languages()
     langs = [f"{lang.code} ({lang.name})" for lang in installed_languages]
     return {"message": "Translation API is running", "languages": langs}
 
@@ -84,7 +109,11 @@ async def translate_text(data: TranslateRequest):
     logger.info(f"Translating ({len(data.q)} chars) from {data.source} to {data.target}")
 
     try:
-        # Find matching installed languages
+        # Ensure model is installed
+        download_and_install_model(data.source, data.target)
+
+        # Refresh installed languages
+        installed_languages = argostranslate.translate.get_installed_languages()
         from_lang = next((lang for lang in installed_languages if lang.code == data.source), None)
         to_lang = next((lang for lang in installed_languages if lang.code == data.target), None)
 
