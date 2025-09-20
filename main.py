@@ -55,33 +55,21 @@ async def home():
 # -----------------------
 # Translate Endpoint
 # -----------------------
-@app.post("/translate")
-async def translate_text(data: TranslateRequest):
-    if not data.q.strip():
-        return JSONResponse(content={"error": "No text provided"}, status_code=400)
+@app.get("/translate")
+async def translate_text_get(q: str, source: str = "en", target: str = "es"):
+    installed_languages = argostranslate.translate.get_installed_languages()
+    from_lang = next((lang for lang in installed_languages if lang.code == source), None)
+    to_lang = next((lang for lang in installed_languages if lang.code == target), None)
 
-    try:
-        installed_languages = argostranslate.translate.get_installed_languages()
-        from_lang = next((lang for lang in installed_languages if lang.code == data.source), None)
-        to_lang = next((lang for lang in installed_languages if lang.code == data.target), None)
+    if not from_lang or not to_lang:
+        return {"error": f"Language not supported: {source} → {target}"}
 
-        if not from_lang or not to_lang:
-            return JSONResponse(
-                content={"error": f"Language not supported: {data.source} → {data.target}"},
-                status_code=400,
-            )
+    translated = from_lang.get_translation(to_lang).translate(q)
 
-        translated = from_lang.get_translation(to_lang).translate(data.q)
+    return {
+        "translatedText": translated,
+        "source": source,
+        "target": target,
+        "length": len(translated)
+    }
 
-        return {
-            "translatedText": translated,
-            "source": data.source,
-            "target": data.target,
-            "length": len(translated)
-        }
-
-    except Exception as e:
-        logger.exception("Translation failed")
-        return JSONResponse(
-            content={"error": f"Translation failed: {str(e)}"}, status_code=500
-        )
