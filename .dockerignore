@@ -1,22 +1,22 @@
-# Ignore git + editor stuff
+# Git + editor files
 .git
 .gitignore
 .gitattributes
 .editorconfig
-.Dockerfile.swp
+*.swp
 
-# Ignore docker-compose and k8s configs (not needed in Railway build)
+# Docker-compose / K8s configs (not needed in Railway)
 docker-compose*.yml
 k8s.yaml
 chart/
 
-# Ignore docs and markdown files except README
+# Docs except README
 docs/
 *.md
 !README.md
 *.yaml
 
-# Python build cache
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
@@ -25,13 +25,13 @@ __pycache__/
 # Virtual environment
 venv/
 
-# Local database and models (too large for Railway)
+# Local database and large models
 db/
-# models/
+models/
 
-# Tests (don’t need them in production build)
+# Tests
 tests/
 
-# Env and config overrides
+# Env and overrides
 .env
 *.env

@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -31,7 +31,7 @@ executor = ThreadPoolExecutor(max_workers=2)
 app = FastAPI(
     title="LibreTranslate API Wrapper",
     description="A FastAPI wrapper using Argos Translate models",
-    version="1.2.0",
+    version="1.3.0",
 )
 
 # -----------------------
@@ -39,12 +39,11 @@ app = FastAPI(
 # -----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru"],  # adjust for production
+    allow_origins=["*"],  # adjust for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # -----------------------
 # Request Model
@@ -68,9 +67,6 @@ async def log_requests(request, call_next):
 # Helper functions
 # -----------------------
 def download_and_install_model(source: str, target: str):
-    """
-    Downloads and installs an Argos Translate model if missing.
-    """
     installed_languages = argostranslate.translate.get_installed_languages()
     from_lang = next((l for l in installed_languages if l.code == source), None)
     if from_lang and any(t.to_lang.code == target for t in from_lang.translations):
@@ -115,6 +111,17 @@ async def home():
     installed_languages = argostranslate.translate.get_installed_languages()
     langs = [f"{lang.code} ({lang.name})" for lang in installed_languages]
     return {"message": "Translation API is running", "languages": langs}
+
+# -----------------------
+# Model Status Endpoint
+# -----------------------
+@app.get("/model-status")
+async def model_status(source: str = Query(...), target: str = Query(...)):
+    installed_languages = argostranslate.translate.get_installed_languages()
+    from_lang = next((l for l in installed_languages if l.code == source), None)
+    if from_lang and any(t.to_lang.code == target for t in from_lang.translations):
+        return {"status": "ready"}
+    return {"status": "downloading"}
 
 # -----------------------
 # Translate Endpoint
