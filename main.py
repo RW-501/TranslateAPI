@@ -27,7 +27,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://contenthub.guru", 
-        "http://localhost:3000"
+        "https://contenthub.guru/", 
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
