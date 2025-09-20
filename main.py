@@ -45,6 +45,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # -----------------------
 # Request Model
 # -----------------------
