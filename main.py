@@ -40,7 +40,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://contenthub.guru","*" ],  # exact frontend origin
+    allow_origins=["https://contenthub.guru","https://contenthub.guru/","*" ],  # exact frontend origin
     allow_credentials=True,
     allow_methods=["*"],   # allow POST, GET, etc.
     allow_headers=["*"],   # allow custom headers
